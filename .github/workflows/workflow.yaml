@@ -9,37 +9,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
       - name: 🐳 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: 🔐 Create .env from secrets
+      - name: 🔐 Create .env from GitHub secrets
         run: |
-          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" > .env
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
           echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
           echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
           echo "PINECONE_API_KEY=${{ secrets.PINECONE_API_KEY }}" >> .env
 
-      - name: 🔨 Build stack
+      - name: 🔨 Build Docker stack
         run: docker compose build
 
-      - name: 🚀 Start stack
-        run: |
-          docker compose up -d
-          # Wait a few seconds for containers to initialize
-          sleep 10
+      - name: 🚀 Start Docker stack
+        run: docker compose up -d
 
       - name: ⏳ Wait for Postgres to be ready
         run: |
-          until docker compose exec -T db pg_isready -U ${{ secrets.POSTGRES_USER }}; do
-            echo "Waiting for Postgres..."
+          echo "Waiting for Postgres to accept connections..."
+          until docker compose logs db | grep -q "database system is ready to accept connections"; do
             sleep 5
           done
 
-      - name: 📋 Show web logs (if any startup issues)
+      - name: 📋 Show web logs (if needed for debugging)
         run: docker compose logs web
 
       - name: 🗄️ Run Alembic migrations
@@ -48,7 +45,7 @@ jobs:
       - name: 🧪 Run tests
         run: docker compose exec -T web pytest -v
 
-      - name: 🧹 Cleanup
+      - name: 🧹 Cleanup Docker stack
         if: always()
         run: docker compose down -v
 
