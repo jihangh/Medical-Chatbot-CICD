@@ -8,6 +8,21 @@ jobs:
   CI:
     runs-on: ubuntu-latest
 
+    services:
+      db:
+        image: postgres:15
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ${{ secrets.POSTGRES_USER }}"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -21,17 +36,27 @@ jobs:
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
           echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
           echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
-          echo "PINECONE_API_KEY=${{secrets.PINECONE_API_KEY}}" >> .env
+          echo "PINECONE_API_KEY=${{ secrets.PINECONE_API_KEY }}" >> .env
 
       - name: 🔨 Build stack
         run: docker compose build
 
       - name: 🚀 Start stack
         run: |
-          docker compose up -d
-          sleep 30
+          docker compose up -d db
+          docker compose up -d web gradio
 
-      - name: 🗄️ Run Alembic
+      - name: ⏳ Wait for Postgres to be ready
+        run: |
+          until docker compose exec -T db pg_isready -U ${{ secrets.POSTGRES_USER }}; do
+            echo "Waiting for Postgres..."
+            sleep 5
+          done
+
+      - name: 📋 Show web logs (if any startup issues)
+        run: docker compose logs web
+
+      - name: 🗄️ Run Alembic migrations
         run: docker compose exec -T web alembic upgrade head
 
       - name: 🧪 Run tests
@@ -40,6 +65,7 @@ jobs:
       - name: 🧹 Cleanup
         if: always()
         run: docker compose down -v
+
 
 
   # CD:
