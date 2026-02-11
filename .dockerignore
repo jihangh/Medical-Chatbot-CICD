@@ -41,4 +41,3 @@ data/
 rag_state.yaml
 *.pdf
 *pkl
-tests/
