@@ -21,24 +21,25 @@ jobs:
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
           echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
           echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+          echo "PINECONE_API_KEY=${{secrets.PINECONE_API_KEY}}" >> .env
 
       - name: 🔨 Build stack
-        run: docker-compose build
+        run: docker compose build
 
       - name: 🚀 Start stack
         run: |
-          docker-compose up -d
+          docker compose up -d
           sleep 30
 
       - name: 🗄️ Run Alembic
-        run: docker-compose exec -T web alembic upgrade head
+        run: docker compose exec -T web alembic upgrade head
 
       - name: 🧪 Run tests
-        run: docker-compose exec -T web pytest -v
+        run: docker compose exec -T web pytest -v
 
       - name: 🧹 Cleanup
         if: always()
-        run: docker-compose down -v
+        run: docker compose down -v
 
 
   # CD:
