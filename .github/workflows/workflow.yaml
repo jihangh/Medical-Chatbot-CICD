@@ -1,0 +1,105 @@
+name: Deploy Medical RAG to EC2
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔐 Create .env from secrets
+        run: |
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+
+      - name: 🔨 Build stack
+        run: docker-compose build
+
+      - name: 🚀 Start stack
+        run: |
+          docker-compose up -d
+          sleep 30
+
+      - name: 🗄️ Run Alembic
+        run: docker-compose exec -T web alembic upgrade head
+
+      - name: 🧪 Run tests
+        run: docker-compose exec -T web pytest -v
+
+      - name: 🧹 Cleanup
+        if: always()
+        run: docker-compose down -v
+
+
+  # CD:
+  #   needs: CI
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #     - name: 📥 Checkout
+  #       uses: actions/checkout@v4
+
+  #     - name: 🔑 Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+
+  #     - name: 🔐 Login to Amazon ECR
+  #       id: login-ecr
+  #       uses: aws-actions/amazon-ecr-login@v2
+
+  #     - name: 📦 Build & Push Images
+  #       env:
+  #         REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+  #         REPO: ${{ secrets.ECR_REPO }}
+  #         TAG: latest
+  #       run: |
+  #         docker build -t $REGISTRY/$REPO:$TAG .
+  #         docker push $REGISTRY/$REPO:$TAG
+
+
+  # DEPLOY:
+  #   needs: CD
+  #   runs-on: self-hosted
+
+  #   steps:
+  #     - name: 📥 Checkout
+  #       uses: actions/checkout@v4
+
+  #     - name: 🔑 Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+
+  #     - name: 🔐 Login to ECR
+  #       uses: aws-actions/amazon-ecr-login@v2
+
+  #     - name: 🔐 Create .env on server
+  #       run: |
+  #         echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+  #         echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+  #         echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+  #         echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+
+  #     - name: 🚀 Deploy with Docker Compose
+  #       run: |
+  #         docker-compose pull
+  #         docker-compose up -d --build
+
+  #     - name: 🗄️ Run migrations
+  #       run: docker-compose exec -T web alembic upgrade head
+
