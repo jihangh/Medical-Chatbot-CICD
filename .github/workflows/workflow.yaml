@@ -23,7 +23,7 @@ jobs:
           --health-timout 5s
           --health-retries 5
     env:
-      - DATABASE_URL=postgresql://medicalrag_role:medicalrag55@db:5432/medicalrag_db
+      - DATABASE_URL=postgresql://medicalrag_role:medicalrag55@localhost:5432/medicalrag_db
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
