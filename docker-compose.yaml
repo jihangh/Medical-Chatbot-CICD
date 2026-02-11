@@ -1,40 +1,43 @@
 
 services:
+  db:
+    image: postgres:15
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"       # optional for CI; can be removed if not needed
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   web:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     ports:
       - "8888:8888"
     env_file:
       - .env
-    environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-    depends_on:
-      - db
 
-  db:
-    image: postgres:latest
-    env_file:
-      - .env
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "5432:5432"
+    depends_on:
+      db:
+        condition: service_healthy
 
   gradio:
     build:
       context: .
       dockerfile: Dockerfile
-    env_file:
-      - .env
     ports:
       - "7860:7860"
+    env_file:
+      - .env
     environment:
-      - API_BASE_URL=http://web:8888
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      API_BASE_URL: "http://web:8888"
+      DATABASE_URL: "postgresql://$${POSTGRES_USER}:$${POSTGRES_PASSWORD}@db:5432/$${POSTGRES_DB}"
     depends_on:
-      - web
-      - db
+      web:
+        condition: service_healthy
+      db:
+        condition: service_healthy
