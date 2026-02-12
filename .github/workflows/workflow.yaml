@@ -1,51 +1,60 @@
-name: CI Medical RAG
+name: Medical Chatbot Workflow
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  CI:
+  web:
     runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: postgres:15
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U ${{ secrets.POSTGRES_USER }}"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DATABASE_URL: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/${{ secrets.POSTGRES_DB }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-      - name: Create .env from secrets
+      - name: Install dependencies
         run: |
-          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" > .env
-          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" > .env
-          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
-          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" > .env
-          echo "PINECONE_API_KEY=${{ secrets.PINECONE_API_KEY }}" > .env
-
-      - name: Build Docker stack
-        run: docker compose build
-
-      - name: Start Docker stack
-        run: docker compose up -d
-
-      - name: Wait for Postgres to be ready
-        run: |
-          echo "Waiting for Postgres..."
-          until docker compose ps | grep db | grep healthy; do
-            docker compose logs db | tail -n 20
-            sleep 5
-          done
-
-      - name: Run Alembic migrations
-        run: docker compose exec -T web alembic upgrade head
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Run tests
-        run: docker compose exec -T web pytest -v
+        run: |
+          pytest tests
 
-      - name: Cleanup
-        if: always()
-        run: docker compose down -v
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: web
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t myragapp:latest .
 
 
 
