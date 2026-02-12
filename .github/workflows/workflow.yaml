@@ -137,10 +137,10 @@ jobs:
 
 
       - name: 📥 Pull latest image
-        run: docker-compose pull
+        run: docker compose pull
 
       - name: 🚀 Start containers
-        run: docker-compose up -d
+        run: docker compose up -d
 
       - name: 🗄️ Run database migrations
-        run: docker-compose exec -T web alembic upgrade head
+        run: docker compose exec -T web alembic upgrade head
