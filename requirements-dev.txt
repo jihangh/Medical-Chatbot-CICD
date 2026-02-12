@@ -9,7 +9,6 @@ stack-data<0.7
 pytest
 black
 ruff
-Optional: y
 torch==2.2.2
 torchvision==0.17.2
 fastapi==0.116.1
