@@ -124,26 +124,9 @@ git clone https://github.com/jihangh/RAG-based-Medical-Chatbot.git
 cd RAG-based-Medical-Chatbot
 ````
 
----
 
-## 2️⃣ Create `.env`
 
-```env
-OPENAI_API_KEY=your_openai_api_key
-PINECONE_API_KEY=your_pinecone_api_key
-
-POSTGRES_USER=your_user
-POSTGRES_PASSWORD=your_password
-POSTGRES_DB=your_db
-
-DATABASE_URL=postgresql://POSTGRES_USER:POSTGRES_PASSWORD@db/POSTGRES_DB
-```
-
-> PostgreSQL runs automatically via Docker Compose.
-
----
-
-## 3️⃣ Configure System
+## 2️⃣ Configure System
 
 Edit:
 
@@ -162,7 +145,7 @@ Optional: adjust chunk size, alpha score, and model settings.
 
 ---
 
-## 4️⃣ Customize System Prompt
+## 3️⃣ Customize System Prompt
 
 Edit:
 
