@@ -1,156 +1,172 @@
-# 🩺 Medical Chatbot with RAG
-
-A **Retrieval-Augmented Generation (RAG)** chatbot for general medical question answering, powered by **OpenAI GPT-5 nano** and built with **LangChain**. The system uses a **hybrid retrieval pipeline** to search trusted medical knowledge from *The Gale Encyclopedia of Medicine* and generate concise, contextual, and informative answers.
-
-This project demonstrates how to combine modern LLMs with vector database and hybrid retrieval to build effective medical QA systems.
+Here is your fully formatted **README.md** version (clean markdown, properly structured, ready to paste directly into GitHub):
 
 ---
 
-## ⚠️ Medical Disclaimer
+```markdown
+# 🩺 Medical Chatbot with RAG  
+Production-Ready RAG System with AWS CI/CD Deployment
 
-> **IMPORTANT:** This chatbot is designed for **informational and educational purposes only**. It is **NOT** a substitute for professional medical advice, diagnosis, or treatment.
+A **Retrieval-Augmented Generation (RAG)** chatbot for medical question answering, powered by **OpenAI GPT-5 nano** and built using **LangChain**.
 
-✅ This tool should be used as a **supplement**, not a replacement, for professional medical consultation.
+The system implements a **hybrid retrieval pipeline (dense + sparse)** over a trusted medical knowledge base (*The Gale Encyclopedia of Medicine*), integrates **persistent conversational memory**, and is deployed to **AWS using a fully automated CI/CD pipeline with GitHub Actions**.
 
----
-
-## ✨ Key Features
-
-* **🚀 Fast & Cost-Effective LLM**  
-  Powered by **OpenAI GPT-5 nano** for concise, efficient responses.
-
-* **🧠 Hybrid Retrieval (Dense + Sparse)**  
-  Combines semantic embeddings with keyword-based search for higher accuracy using a tunable `alpha` score.
-
-* **📚 Trusted Medical Knowledge Base**  
-  Built from *The Gale Encyclopedia of Medicine*.
-
-* **🧩 Domain-Specific Chunking**  
-  Uses LangChain’s `RecursiveCharacterTextSplitter` with medical-aware chunking strategy.
-
-* **🔍 Vector Search with Pinecone**  
-  Stores and retrieves medical documents efficiently at scale.
-
-* **🧠 Caching & Reprocessing Avoidance**  
-  Avoids recomputing embeddings unless embedding related configuration changes were made.
-  * **Pipeline Fingerprinting**: SHA-256 hash over ingestion configuration.  
-  * **`rag_state.yaml`**: generated after the first run. It persists fingerprint and vector count to detect any future configuration changes.
-
-* **🔗 API-Driven RAG Pipeline**  
-  * **/rag/vectorstore**: generate and upsert embeddings  
-  * **/rag/chat**: run the full RAG workflow  
-  * **/rag/chathistory**: view persisted chat history
-
-* **🖥️ Interactive UI**  
-  Simple and clean **Gradio** interface for real-time medical Q&A.
-
-* **🔗 LangChain Orchestration**  
-  Seamlessly integrates LLMs, retrievers, embeddings, and short-term memory.
-
-* **🗂️ Session-Based Conversational Memory (Persistent)**  
-  Maintains conversation context per user session and **persists chat history in PostgreSQL**.  
-  The Gradio `session_id` is passed as the LangGraph `thread_id`, allowing conversations to survive requests and container restarts.  
-  Stored conversations can be retrieved via **/rag/chathistory**.
+This project demonstrates how to architect, containerize, deploy, and scale a real-world LLM-powered medical system.
 
 ---
 
-## 🏗️ Architecture Overview
+# ⚠️ Medical Disclaimer
+
+> **IMPORTANT:** This chatbot is for educational and informational purposes only.  
+> It is NOT a substitute for professional medical advice, diagnosis, or treatment.
+
+Always consult a licensed healthcare professional for medical concerns.
+
+---
+
+# ✨ Key Features
+
+## 🚀 Efficient LLM
+- Powered by **OpenAI GPT-5 nano**
+- Optimized for concise, cost-effective responses
+
+## 🧠 Hybrid Retrieval (Dense + Sparse)
+- Dense embeddings: `text-embedding-3-large`
+- Sparse retrieval: `pinecone-sparse-english-v0`
+- Tunable hybrid scoring using `alpha`
+
+## 📚 Trusted Knowledge Base
+- Built from *The Gale Encyclopedia of Medicine*
+
+## 🧩 Domain-Aware Chunking
+- `RecursiveCharacterTextSplitter`
+- Medical-aware chunk segmentation
+
+## 🔍 Scalable Vector Search
+- **Pinecone** vector database
+- Efficient semantic + keyword retrieval
+
+## 🧠 Smart Ingestion & Fingerprinting
+- SHA-256 pipeline fingerprinting
+- `rag_state.yaml` prevents unnecessary reprocessing
+- Embeddings recomputed only if configuration changes
+
+## 💬 Persistent Conversational Memory
+- Session-based memory
+- PostgreSQL-backed chat history
+- Survives container restarts
+- Accessible via `/rag/chathistory`
+
+## 🔗 API-Driven RAG System
+- `/rag/vectorstore` → embed & upsert documents
+- `/rag/chat` → full RAG pipeline
+- `/rag/chathistory` → retrieve conversation history
+
+## 🖥️ Interactive UI
+- Clean **Gradio** interface
+- Multi-turn context-aware responses
+
+---
+
+# 🏗️ System Architecture
 
 ```
+
 User Query
-   ↓
+↓
 Gradio Interface
-   ↓
+↓
 FastAPI (/rag/chat)
-   ↓
+↓
 LangChain Orchestrator
-   ↓
+↓
 Hybrid Retriever (Dense + Sparse)
-   ↓
+↓
 Pinecone Vector Database
-   ↓
+↓
 Context Assembly
-   ↓
+↓
 OpenAI GPT-5 nano
-   ↓
-Answer to User
-```
+↓
+Response
+↓
+Persist to PostgreSQL
+
+````
 
 ---
 
-## 🔧 Tech Stack
+# 🔧 Tech Stack
 
-* **LLM:** OpenAI GPT-5 nano  
-* **Framework:** LangChain  
-* **Vector DB:** Pinecone  
-* **Embeddings:**  
-  * `text-embedding-3-large` (dense)  
-  * `pinecone-sparse-english-v0` (sparse)  
-* **API Layer:** FastAPI  
-* **Interface:** Gradio  
-* **Database:** PostgreSQL (via Docker)  
-* **Language:** Python
-
----
-
-## 🎮 Demo
-
-![Medical Chatbot Demo](assets/demo_screenshot0.PNG)  
-<small>Screenshot: Multi-turn conversation showing context-aware answers</small>
+| Component | Technology |
+|-----------|------------|
+| LLM | OpenAI GPT-5 nano |
+| Framework | LangChain |
+| Vector DB | Pinecone |
+| API | FastAPI |
+| UI | Gradio |
+| Database | PostgreSQL (Docker / AWS RDS) |
+| Cloud | AWS (EC2, ECR, RDS) |
+| CI/CD | GitHub Actions |
+| Language | Python |
 
 ---
 
-## ✅ Prerequisites
+# 🐳 Local Development (Docker)
 
-* Docker Desktop installed and running  
-* OpenAI API key  
-* Pinecone API key
+## Prerequisites
+
+- Docker Desktop
+- OpenAI API key
+- Pinecone API key
 
 ---
 
-## ⚙️ Installation
-
-### 1️⃣ Clone the Repository
+## 1️⃣ Clone Repository
 
 ```bash
 git clone https://github.com/jihangh/RAG-based-Medical-Chatbot.git
 cd RAG-based-Medical-Chatbot
-```
+````
 
 ---
 
-### 2️⃣ Create `.env` file in project root
+## 2️⃣ Create `.env`
 
 ```env
-OPENAI_API_KEY=your_openai_api_key_here
-PINECONE_API_KEY=your_pinecone_api_key_here
-POSTGRES_USER=yourrolename
-POSTGRES_PASSWORD=yourdbpassword
-POSTGRES_DB=yournameofdb
-DATABASE_URL="postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost/{POSTGRES_DB}"
+OPENAI_API_KEY=your_openai_api_key
+PINECONE_API_KEY=your_pinecone_api_key
+
+POSTGRES_USER=your_user
+POSTGRES_PASSWORD=your_password
+POSTGRES_DB=your_db
+
+DATABASE_URL=postgresql://POSTGRES_USER:POSTGRES_PASSWORD@db/POSTGRES_DB
 ```
 
-> PostgreSQL is provided automatically via Docker Compose.  
-> You do **NOT** need to install PostgreSQL locally when using Docker.  
-> The database hostname is internally configured as `db`.  
-> `DATABASE_URL` is added in case you want to run the project locally, not on Docker.
+> PostgreSQL runs automatically via Docker Compose.
 
 ---
 
-### 3️⃣ Configure the System
+## 3️⃣ Configure System
 
-Edit `config.yaml`:
+Edit:
+
+```yaml
+config.yaml
+```
+
+Set:
 
 ```yaml
 index_name: your_index_name
 name_space: your_namespace
 ```
 
-Feel free to adjust other parameters such as chunk size, retriever alpha, and model settings.
+Optional: adjust chunk size, alpha score, and model settings.
 
 ---
 
-### 4️⃣ Feel Free to Customize the System Prompt
+## 4️⃣ Customize System Prompt
 
 Edit:
 
@@ -158,102 +174,233 @@ Edit:
 system_prompt.txt
 ```
 
-This controls tone, safety, and answer formatting.
+---
+
+# ☁️ AWS CI/CD Deployment (Production)
+
+This project includes automated cloud deployment using:
+
+* AWS EC2
+* AWS ECR
+* AWS RDS (PostgreSQL)
+* GitHub Actions (Self-hosted runner)
 
 ---
 
-## 💻 Usage
+## 1️⃣ IAM Setup
 
-```bash
-docker compose up --build
-```
+Create IAM user with:
 
-APIs: [http://localhost:8888/docs](http://localhost:8888/docs)  
-UI: [http://localhost:8888/ui](http://localhost:8888/ui)
-
----
-
-## 🐍 Optional: Run Without Docker
-
-```bash
-python -m venv venv
-source venv/bin/activate  # macOS/Linux
-venv\Scripts\activate.bat # Windows
-
-pip install -r requirements.txt
-uvicorn main:app --host 0.0.0.0 --port 8888
-```
-
-> You must provide your own PostgreSQL instance and update the DB connection accordingly.
+* `AmazonEC2ContainerRegistryFullAccess`
+* `AmazonEC2FullAccess`
+* `AmazonRDSFullAccess`
 
 ---
 
-### PostgreSQL Setup (if running locally)
+## 2️⃣ Create ECR Repository
 
-✅ 1. Install PostgreSQL  
-🖥️ macOS  
-```bash
-brew install postgresql
-brew services start postgresql
+Create a repository in ECR.
+
+Save the repository URI:
+
+```
+<account-id>.dkr.ecr.<region>.amazonaws.com/<reponame>
 ```
 
-🖥️ Ubuntu / Debian  
+---
+
+## 3️⃣ Launch EC2 (Ubuntu)
+
+Configure **Inbound Rules**:
+
+| Port | Purpose               |
+| ---- | --------------------- |
+| 22   | SSH                   |
+| 8888 | FastAPI / UI          |
+| 5432 | PostgreSQL (from RDS) |
+
+Install Docker:
+
 ```bash
-sudo apt update
-sudo apt install postgresql postgresql-contrib
-sudo systemctl start postgresql
+sudo apt-get update -y
+sudo apt-get upgrade -y
+
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+sudo usermod -aG docker ubuntu
+newgrp docker
 ```
 
-🖥️ Windows  
-Download from [postgresql.org](https://www.postgresql.org/download/windows/) and follow instructions.
+---
 
-✅ 2. Access PostgreSQL  
-```bash
-psql postgres
-# or on macOS/Ubuntu
-sudo -u postgres psql
+## 4️⃣ Configure Self-Hosted Runner
+
+Repository →
+`Settings → Actions → Runners → New self-hosted runner`
+
+Run setup commands on EC2.
+
+Use runner name:
+
+```
+self-hosted
 ```
 
-✅ 3. Create Role & Database
+---
 
-```sql
--- Create a new user
-CREATE ROLE userrole WITH LOGIN PASSWORD 'yourpassword';
+## 5️⃣ AWS RDS Setup (PostgreSQL)
 
--- Allow the user to create databases (optional)
-ALTER ROLE userrole CREATEDB;
+### Create Database
 
--- Create the app database
-CREATE DATABASE nameofdb OWNER userrole;
+AWS Console → RDS → Create Database
 
--- Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE nameofdb TO userrole;
+* Engine: PostgreSQL
+* Easy create
+* DB identifier: `database-rag`
+* Username: `postgres`
+* Password: yourpassword
 
--- Exit
+---
+
+### Configure Security
+
+RDS → Connectivity & Security → Security Group → Inbound Rules
+
+Add:
+
+* Type: PostgreSQL
+* Port: 5432
+* Source: EC2 security group
+
+---
+
+### Find DB_HOST
+
+RDS → Databases → database-rag → Connectivity & Security
+
+Under:
+
+```
+Endpoint & Port
+```
+
+Example:
+
+```
+database-rag.xxxxxx.region.rds.amazonaws.com
+```
+
+Use this as:
+
+```
+DB_HOST
+```
+
+---
+
+### Create Database from EC2
+
+```bash
+psql -h <DB_HOST> -U postgres
+CREATE DATABASE "database-rag";
+```
+
+Test connection:
+
+```bash
+psql -h <DB_HOST> -U postgres -d database-rag
+```
+
+Exit:
+
+```
 \q
 ```
 
-Replace `userrole`, `yourpassword`, and `nameofdb` with your values.
+---
+
+## 6️⃣ GitHub Secrets
+
+Add:
+
+```
+AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY
+AWS_ACCOUNT_ID
+AWS_DEFAULT_REGION
+ECR_REPO
+
+OPENAI_API_KEY
+PINECONE_API_KEY
+
+DB_HOST
+DB_NAME
+DB_USER
+DB_PASSWORD
+```
 
 ---
 
-## ⚠️ Limitations & Considerations
+## 7️⃣ Deploy
 
-### 🔧 Technical
+Push to main branch.
 
-* Answers limited to *The Gale Encyclopedia of Medicine*  
-* May not reflect the most recent clinical guidelines  
-* Performance depends on query clarity and context quality
+GitHub Actions will:
 
-### ⚖️ Ethical
-
-* Not suitable for emergency situations  
-* Not for self-diagnosis or treatment decisions  
-* Possible source biases  
-* Human medical oversight is essential
+1. Build Docker image
+2. Push to ECR
+3. Pull image on EC2
+4. Restart container
 
 ---
 
-## 🤝 Contributing
+## 8️⃣ Access Application
 
-Contributions, issues, and feature requests are welcome. Feel free to fork the project and submit a PR.
+Open EC2 security group → add:
+
+* Custom TCP → Port 8888 → Anywhere
+
+Then visit:
+
+```
+http://<EC2_PUBLIC_IP>:8888/docs
+```
+
+or
+
+```
+http://<EC2_PUBLIC_IP>:8888/ui
+```
+
+---
+
+# ⚠️ Limitations
+
+## Technical
+
+* Limited to The Gale Encyclopedia of Medicine
+* Not real-time clinical updates
+* Retrieval quality depends on query clarity
+
+## Ethical
+
+* Not for emergency use
+* Not for diagnosis or treatment decisions
+* Human oversight required
+
+---
+
+# 🤝 Contributing
+
+Contributions and improvements are welcome.
+Feel free to fork and submit a PR.
+
+```
+🙏 Acknowledgements
+
+This project is inspired by the work from the following repository:
+
+🔗 Build a Complete Medical Chatbot with LLMs, LangChain, Pinecone, Flask & AWS
+https://github.com/entbappy/Build-a-Complete-Medical-Chatbot-with-LLMs-LangChain-Pinecone-Flask-AWS
+
