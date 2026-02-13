@@ -1,6 +1,3 @@
-Here is your fully formatted **README.md** version (clean markdown, properly structured, ready to paste directly into GitHub):
-
----
 
 ```markdown
 # 🩺 Medical Chatbot with RAG  
