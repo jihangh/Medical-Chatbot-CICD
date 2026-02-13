@@ -153,7 +153,6 @@ Edit:
 system_prompt.txt
 ```
 
----
 
 # ☁️ AWS CI/CD Deployment (Production)
 
