@@ -41,3 +41,4 @@ data/
 rag_state.yaml
 *.pdf
 *pkl
+docker-compose-localhost.yaml
