@@ -11,9 +11,25 @@ jobs:
 # =========================
   web:
     runs-on: ubuntu-latest
-    env:
-      DATABASE_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:5432/${{ secrets.DB_NAME }}
 
+    # Temporary Postgres for CI tests
+    services:
+      db:
+        image: postgres:15
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U testuser"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
 
@@ -29,8 +45,14 @@ jobs:
       - name: 📦 Install dependencies
         run: |
           python -m pip install --upgrade pip
-          
           pip install -r requirements-dev.txt
+
+      - name: ⏳ Wait for Postgres
+        run: |
+          until pg_isready -h localhost -p 5432 -U testuser; do
+            echo "Waiting for Postgres..."
+            sleep 5
+          done
 
       - name: 🗄️ Run Alembic migrations
         run: alembic upgrade head
@@ -76,18 +98,18 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: 📦 Build & Push Docker Image
+      - name: 📦 Tag & Push Docker Image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.ECR_REPO }}
           IMAGE_TAG: latest
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker tag myragapp:latest $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
 
 # =========================
-# 4️⃣ Deploy on Server
+# 4️⃣ Deploy on EC2
 # =========================
   DEPLOY:
     runs-on: self-hosted
@@ -109,14 +131,10 @@ jobs:
 
       - name: 🔐 Create .env file
         run: |
-          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" > .env
           echo "PINECONE_API_KEY=${{ secrets.PINECONE_API_KEY }}" >> .env
-          echo "DATABASE_URL=DATABASE_URL=postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:5432/${{ secrets.DB_NAME }}" >> .env
-      - name: Export ECR image
-        run: |
-          export ECR_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/${{ secrets.ECR_REPO }}:latest
-          echo "ECR_IMAGE=$ECR_IMAGE" >> .env
-
+          echo "DATABASE_URL=postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:5432/${{ secrets.DB_NAME }}" >> .env
+          echo "ECR_IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_DEFAULT_REGION }}.amazonaws.com/${{ secrets.ECR_REPO }}:latest" >> .env
 
       - name: 📥 Pull latest image
         run: docker compose pull
@@ -124,6 +142,12 @@ jobs:
       - name: 🚀 Start containers
         run: docker compose up -d
 
-      - name: 🗄️ Run database migrations
-        run: docker compose exec -T web alembic upgrade head
+      - name: ⏳ Wait for AWS RDS Postgres
+        run: |
+          until pg_isready -h ${{ secrets.DB_HOST }} -U ${{ secrets.DB_USER }}; do
+            echo "Waiting for RDS..."
+            sleep 5
+          done
 
+      - name: 🗄️ Run Alembic migrations
+        run: docker compose exec -T web alembic upgrade head
