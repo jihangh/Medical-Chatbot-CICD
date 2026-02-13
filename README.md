@@ -86,6 +86,7 @@ OpenAI GPT-5 nano
 Response
 ↓
 Persist to PostgreSQL
+```
 
 
 ---
