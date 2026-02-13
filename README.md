@@ -1,5 +1,4 @@
 
-```markdown
 # 🩺 Medical Chatbot with RAG  
 Production-Ready RAG System with AWS CI/CD Deployment
 
@@ -88,7 +87,6 @@ Response
 ↓
 Persist to PostgreSQL
 
-````
 
 ---
 
@@ -394,7 +392,8 @@ Contributions and improvements are welcome.
 Feel free to fork and submit a PR.
 
 ```
-🙏 Acknowledgements
+
+# 🙏 Acknowledgements
 
 This project is inspired by the work from the following repository:
 
