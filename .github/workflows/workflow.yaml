@@ -142,13 +142,13 @@ jobs:
       - name: 🚀 Start containers
         run: docker compose up -d
 
-      # - name: ⏳ Wait for AWS RDS Postgres
-      #   run: |
-      #     until docker run --rm postgres:15 \
-      #       pg_isready -h ${{ secrets.DB_HOST }} -U ${{ secrets.DB_USER }}; do
-      #       echo "Waiting for RDS..."
-      #       sleep 5
-      #     done
+      - name: ⏳ Wait for AWS RDS Postgres
+        run: |
+          until docker run --rm postgres:15 \
+            pg_isready -h ${{ secrets.DB_HOST }} -U ${{ secrets.DB_USER }}; do
+            echo "Waiting for RDS..."
+            sleep 5
+          done
 
       - name: 🗄️ Run Alembic migrations
         run: docker compose exec -T web alembic upgrade head
