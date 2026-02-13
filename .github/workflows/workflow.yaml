@@ -144,7 +144,8 @@ jobs:
 
       - name: ⏳ Wait for AWS RDS Postgres
         run: |
-          until pg_isready -h ${{ secrets.DB_HOST }} -U ${{ secrets.DB_USER }}; do
+          until docker run --rm postgres:15 \
+            pg_isready -h ${{ secrets.DB_HOST }} -U ${{ secrets.DB_USER }}; do
             echo "Waiting for RDS..."
             sleep 5
           done
