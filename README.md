@@ -107,11 +107,10 @@ Persist to PostgreSQL
 
 ---
 
-# 🐳 Local Development (Docker)
+# Deployment Procedure
 
 ## Prerequisites
 
-- Docker Desktop
 - OpenAI API key
 - Pinecone API key
 
